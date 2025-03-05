@@ -1,0 +1,12 @@
+[package]
+name = "rutinaAPP"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sqlx = { version = "0.7", features = ["mysql", "runtime-tokio", "chrono"] }
+chrono = { version = "0.4" }
+tokio = { version = "1", features = ["full"] }
+dotenv = "0.15.0"
+rocket = { version = "0.5.1", features = ["json"] }
+serde = { version = "1.0.218", features = ["derive"] }

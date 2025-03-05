@@ -1,0 +1,30 @@
+# Archivos generados por Cargo
+/target/
+**/target/
+Cargo.lock
+
+# Archivos de entorno
+.env
+.env.*
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# IDEs y editores de código
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Archivos temporales
+*.log
+*.tmp
+*.swp
+*.bak
+
+# Dependencias locales
+/.cargo/
+
+# SQLx cache
+/sqlx-data.json
