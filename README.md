@@ -3,7 +3,7 @@
 - {Guapo 1}
 - {Guapo 2}
 - {Guapo 3}
-- {Guapo 4}
+- Guerrero Dávila Juan Carlos
 - Zúñiga Gómez Jóse Alberto
 
 ---
