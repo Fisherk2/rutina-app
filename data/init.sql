@@ -36,11 +36,16 @@ CREATE TABLE IF NOT EXISTS confirmaciones (
     UNIQUE (nombre, fecha_rutina)      -- Restricción: Un usuario no puede confirmar más de una vez por día
 );
 
--- 3. Creación de un usuario para ejecutar procedimientos almacenados
+-- 3. Creación de un usuario para ejecutar procedimientos almacenados y otro para acceder de forma remota.
 CREATE USER IF NOT EXISTS 'api_rutinas'@'localhost' IDENTIFIED BY 'mondongo';
 GRANT EXECUTE, SELECT, INSERT ON RutinasDB.* TO 'api_rutinas'@'localhost';
+
+CREATE USER 'remoto_rutinas'@'%' IDENTIFIED BY 'root';
+GRANT ALL PRIVILEGES ON RutinasDB.* TO 'remoto_rutinas'@'%';
+
 FLUSH PRIVILEGES;
-SHOW GRANTS FOR 'api_rutinas'@'localhost';
+
+SHOW GRANTS FOR 'remoto_rutinas'@'%';
 
 -- 4. Índices para optimizar consultas
 CREATE INDEX idx_fecha ON rutinas(fecha); -- Índice para buscar rápidamente por fecha en la tabla `rutinas`
