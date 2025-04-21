@@ -61,5 +61,8 @@ ENV/
 *.sql.gz
 *.dump
 
+#Backup de la base de datos
+data/database_backup.sql
+
 # Archivos de configuración local que no deberían estar en el repositorio
 config.local.json
