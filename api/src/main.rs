@@ -18,5 +18,6 @@ async fn rocket() -> _ {
         .mount("/", routes![
             handler::obtener_rutina_handler,
             handler::insertar_confirmacion_handler
+            handler::obtener_confirmacion_handler
         ]) // Montar ambos endpoints
 }
