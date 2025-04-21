@@ -5,7 +5,6 @@ mod db;
 mod handler;
 
 use rocket::launch;
-use sqlx::MySqlPool;
 
 #[launch]
 async fn rocket() -> _ {

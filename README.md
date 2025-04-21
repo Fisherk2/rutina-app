@@ -9,11 +9,19 @@
 ---
 
 #### ENV
+Para utilizar la API, es necesario configurar las variables de entorno, este se debe crear en la carpeta `/api` un archivo llamado `.env` con el siguiente contenido:
+
 ```
 DATABASE_URL=mysql://[DB_USER]:[DB_PASSWORD]@[DB_IP]/[DB_NAME]
 ROCKET_ADDRESS=[IP]
 ROCKET_PORT=[Port]
 ```
+- `[DB_USER]`: Nombre de usuario de la base de datos.
+- `[DB_PASSWORD]`: Contraseña de la base de datos.
+- `[DB_IP]`: Dirección IP de la base de datos.
+- `[DB_NAME]`: Nombre de la base de datos.
+- `[IP]`: Dirección IP de la máquina donde se ejecuta la API.
+- `[Port]`: Puerto donde se ejecutará la API.
 
 #### API
 
@@ -30,7 +38,7 @@ Deberías recibir un JSON con estas características:
 [
     {
         "id": 1,
-        "fecha": "2023-10-05",
+        "fecha": "2025-10-05",
         "descripcion": "Hacer ejercicio cardiovascular"
     }
 ]
