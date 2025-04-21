@@ -2,7 +2,7 @@
 *Integrantes*:
 - {Guapo 1}
 - {Guapo 2}
-- {Guapo 3}
+- Espinoza Lopez Juan Diego
 - Guerrero Dávila Juan Carlos
 - Zúñiga Gómez Jóse Alberto
 
