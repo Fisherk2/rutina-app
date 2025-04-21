@@ -75,3 +75,11 @@ pub async fn insertar_confirmacion_handler(
         Err(_) => Err("Error al insertar la confirmación".to_string()),
     }
 }
+
+#[get("/confirmacion/<id_rutina>")]
+pub async fn obtener_confirmacion(pool: &State<MySqlPool>, id_rutina: i32) -> Result<Json<Option<String>>, Status> {
+    match db::obtener_confirmacion(pool, id_rutina).await {
+        Ok(confirmacion) => Ok(Json(confirmacion)),
+        Err(_) => Err(Status::InternalServerError),
+    }
+}
