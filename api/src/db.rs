@@ -74,12 +74,3 @@ pub async fn insertar_confirmacion(
     Ok(())
 }
 
-pub async fn obtener_confirmacion(pool: &sqlx::MySqlPool, id_rutina: i32) -> Result<Option<String>, sqlx::Error> {
-    let row: Option<(String,)> = sqlx::query_as("SELECT confirmacion FROM Confirmaciones WHERE id_rutina = ?")
-        .bind(id_rutina)   
-        .fetch_optional(pool)
-        .await?;
-
-    Ok(row.map(|(confirmacion,)| confirmacion))
-}
-  
