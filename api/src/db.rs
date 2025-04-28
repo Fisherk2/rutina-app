@@ -50,7 +50,7 @@ pub async fn obtener_rutina_diaria(pool: &MySqlPool) -> Result<Vec<Rutina>, Erro
     Ok(rutinas)
 }
 
-// Función para insertar una confirmación usando el procedimiento almacenado
+// Función para insertar una confirmación usando una consulta directa en lugar del procedimiento almacenado
 pub async fn insertar_confirmacion(
     pool: &MySqlPool,
     nombre: &str,
@@ -59,18 +59,32 @@ pub async fn insertar_confirmacion(
     altura: f64,
     sexo: &str,
 ) -> Result<(), Error> {
-    // Ejecutar el procedimiento almacenado
-    sqlx::query!(
-        "CALL InsertarConfirmacion(?, ?, ?, ?, ?)",
-        nombre,
-        edad,
-        peso,
-        altura,
-        sexo
+    // Primero verificamos si el usuario ya confirmó la rutina del día actual
+    let existe = sqlx::query(
+        "SELECT 1 FROM confirmaciones WHERE nombre = ? AND fecha_rutina = CURDATE()"
     )
+    .bind(nombre)
+    .fetch_optional(pool)
+    .await?;
+
+    // Si ya existe una confirmación para este usuario hoy, retornamos un error
+    if existe.is_some() {
+        // Crear un error simple
+        return Err(sqlx::Error::Protocol("El usuario ya confirmó la rutina para hoy".into()));
+    }
+
+    // Si no existe, insertamos la nueva confirmación
+    sqlx::query(
+        "INSERT INTO confirmaciones (nombre, edad, peso, altura, sexo, fecha_rutina) 
+         VALUES (?, ?, ?, ?, ?, CURDATE())"
+    )
+    .bind(nombre)
+    .bind(edad)
+    .bind(peso)
+    .bind(altura)
+    .bind(sexo)
     .execute(pool)
     .await?;
 
     Ok(())
 }
-
