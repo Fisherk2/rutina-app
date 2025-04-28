@@ -1,30 +1,43 @@
 version: '3.8'
 
 services:
+  # Servicio de base de datos MariaDB
   db:
     build:
       context: ./data
-    restart: always
+      dockerfile: Dockerfile
+    container_name: rutina-mariadb
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: RutinasDB
       MYSQL_USER: api_rutinas
       MYSQL_PASSWORD: mondongo
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "api_rutinas", "-pmondongo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - rutina-network
 
+  # Servicio de API Rust
   api:
     build:
       context: ./api
-    restart: always
+      dockerfile: Dockerfile
+    container_name: rutina-api
+    restart: unless-stopped
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
-      DATABASE_URL: mysql://api_rutinas:mondongo@localhost/RutinasDB
+      DATABASE_URL: mysql://api_rutinas:mondongo@db:3306/RutinasDB
       ROCKET_ADDRESS: 0.0.0.0
       ROCKET_PORT: 8080
     ports:
@@ -32,9 +45,12 @@ services:
     networks:
       - rutina-network
 
+# Volúmenes para persistencia de datos
+volumes:
+  db_data:
+    driver: local
+
+# Red para comunicación entre contenedores
 networks:
   rutina-network:
     driver: bridge
-
-volumes:
-  db_data:
