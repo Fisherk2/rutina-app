@@ -1,0 +1,53 @@
+name: Build and Deploy rutinaAPP
+
+on:
+  push:
+    branches: [ test-action ]
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+  workflow_dispatch:  # Permitir ejecución manual desde la interfaz de GitHub
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: Build and push API image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./api
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/rutina-api:latest
+      
+      - name: Build and push DB image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./data
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/rutina-db:latest
+      
+      - name: Deploy to server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /path/to/deployment
+            docker-compose down
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/rutina-api:latest
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/rutina-db:latest
+            docker-compose up -d
