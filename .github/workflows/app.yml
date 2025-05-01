@@ -34,12 +34,12 @@ jobs:
 
       - name: Build project
         run: |
-          cd rutina_app
+          cd api
           cargo build --release
 
       - name: Run tests
         run: |
-          cd rutina_app
+          cd api
           cargo test --verbose
 
       - name: Set up Docker Buildx
@@ -54,7 +54,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: rutina_app
-          file: rutina_app/Dockerfile
+          context: api
+          file: api/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/rutina-app:latest
