@@ -46,7 +46,7 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            cd /path/to/deployment
+            cd ..
             docker-compose down
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/rutina-api:latest
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/rutina-db:latest

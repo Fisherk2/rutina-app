@@ -23,6 +23,14 @@ ROCKET_PORT=[Port]
 - `[IP]`: Dirección IP de la máquina donde se ejecuta la API.
 - `[Port]`: Puerto donde se ejecutará la API.
 
+Las variables de entorno se establecen con estos parametros, para la orquestación de los contenedores:
+
+```
+DATABASE_URL=mysql://api_rutinas:mondongo@db:3306/RutinasDB
+ROCKET_ADDRESS=0.0.0.0
+ROCKET_PORT=8080
+```
+
 #### API
 
 ##### GET/rutina
