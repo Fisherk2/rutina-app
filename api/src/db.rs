@@ -1,10 +1,10 @@
-use sqlx::{MySqlPool, Error, query, query_scalar};
+use sqlx::{MySqlPool, Error, query, query_scalar, Row}; // Añadido Row
 use dotenv::dotenv;
 use std::env;
 use chrono::NaiveDate;
 use std::time::Duration;
 use sqlx::mysql::MySqlConnectOptions;
-use std::str::FromStr;  // Importación añadida para from_str
+use std::str::FromStr;
 
 #[derive(Debug)]
 pub struct Rutina {
@@ -17,14 +17,11 @@ pub async fn create_db_pool() -> Result<MySqlPool, Error> {
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     
-    let pool = MySqlPool::connect_with(
-        MySqlConnectOptions::from_str(&database_url)?
-            .idle_timeout(Duration::from_secs(30))
-            .max_connections(10)
-    )
-    .await?;
-    
-    Ok(pool)
+    let options = MySqlConnectOptions::from_str(&database_url)?
+        .idle_timeout(Duration::from_secs(30))
+        .max_connections(10);
+
+    MySqlPool::connect_with(options).await
 }
 
 pub async fn obtener_rutina_diaria(pool: &MySqlPool) -> Result<Vec<Rutina>, Error> {
@@ -37,9 +34,9 @@ pub async fn obtener_rutina_diaria(pool: &MySqlPool) -> Result<Vec<Rutina>, Erro
     let mut rutinas = Vec::new();
     for row in rows {
         rutinas.push(Rutina {
-            id: row.get("id"),
-            fecha: row.get("fecha"),
-            descripcion: row.get("descripcion"),
+            id: row.try_get("id")?,
+            fecha: row.try_get("fecha")?,
+            descripcion: row.try_get("descripcion")?,
         });
     }
     Ok(rutinas)
