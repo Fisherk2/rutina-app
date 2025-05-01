@@ -1,4 +1,5 @@
-use rocket::{get, State, serde::json::Json};
+use rocket::{get, post, State, serde::json::Json};
+use rocket::http::Status; //Import necesario para manejar errores HTTP
 use sqlx::MySqlPool;
 use crate::db;
 
@@ -23,28 +24,22 @@ pub struct ConfirmacionInput {
 // Endpoint GET /rutina
 #[get("/rutina")]
 pub async fn obtener_rutina_handler(db_pool: &State<MySqlPool>) -> Json<Vec<Rutina>> {
-    // Obtener el pool de conexiones desde Rocket
     let pool = db_pool.inner();
 
-    // Llamar a la función `obtener_rutina_diaria` desde `db.rs`
     match db::obtener_rutina_diaria(pool).await {
         Ok(rutinas) => {
-            // Convertir NaiveDate a String para serializar como JSON
             let rutinas_json = rutinas
                 .into_iter()
                 .map(|r| Rutina {
                     id: r.id,
-                    fecha: r.fecha.format("%Y-%m-%d").to_string(), // Formatear la fecha como String
+                    fecha: r.fecha.format("%Y-%m-%d").to_string(),
                     descripcion: r.descripcion,
                 })
                 .collect();
 
-            Json(rutinas_json) // Devolver las rutinas como JSON
+            Json(rutinas_json)
         }
-        Err(_) => {
-            // En caso de error, devolver una lista vacía
-            Json(vec![])
-        }
+        Err(_) => Json(vec![]),
     }
 }
 
@@ -54,30 +49,32 @@ pub async fn insertar_confirmacion_handler(
     db_pool: &State<MySqlPool>,
     input: Json<ConfirmacionInput>,
 ) -> Result<String, String> {
-    // Obtener el pool de conexiones desde Rocket
     let pool = db_pool.inner();
 
-    // Extraer los datos del JSON
     let nombre = &input.nombre;
     let edad = input.edad;
     let peso = input.peso;
     let altura = input.altura;
     let sexo = &input.sexo;
 
-    // Validar el campo sexo
     if sexo != "M" && sexo != "F" {
         return Err("El campo 'sexo' debe ser 'M' o 'F'".to_string());
     }
 
-    // Llamar a la función `insertar_confirmacion` desde `db.rs`
     match db::insertar_confirmacion(pool, nombre, edad, peso, altura, sexo).await {
         Ok(_) => Ok("Confirmación insertada exitosamente".to_string()),
         Err(_) => Err("Error al insertar la confirmación".to_string()),
     }
 }
 
+// Endpoint GET /confirmacion/<id_rutina>
 #[get("/confirmacion/<id_rutina>")]
-pub async fn obtener_confirmacion(pool: &State<MySqlPool>, id_rutina: i32) -> Result<Json<Option<String>>, Status> {
+pub async fn obtener_confirmacion_handler(
+    db_pool: &State<MySqlPool>,
+    id_rutina: i32
+) -> Result<Json<Option<String>>, Status> {
+    let pool = db_pool.inner();
+
     match db::obtener_confirmacion(pool, id_rutina).await {
         Ok(confirmacion) => Ok(Json(confirmacion)),
         Err(_) => Err(Status::InternalServerError),
