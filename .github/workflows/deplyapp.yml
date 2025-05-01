@@ -8,6 +8,8 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  DOCKER_USERNAME: "shinnog"
+  DOCKER_TOKEN: "dckr_pat_Q0WVCVgb_BMBboE4GsO6hu5kor0"
 
 jobs:
   build-test-deploy:
@@ -46,8 +48,8 @@ jobs:
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ env.DOCKER_TOKEN }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -56,5 +58,5 @@ jobs:
           file: ./api/Dockerfile
           push: ${{ github.ref == 'refs/heads/main' }}
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/rutina-app:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/rutina-app:${{ github.sha }}
+            ${{ env.DOCKER_USERNAME }}/rutina-app:latest
+            ${{ env.DOCKER_USERNAME }}/rutina-app:${{ github.sha }}
