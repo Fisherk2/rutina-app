@@ -1,47 +1,47 @@
-use sqlx::{MySqlPool, Error, Row};
+use sqlx::{MySqlPool, Error, Row, query, query_scalar};
 use dotenv::dotenv;
 use std::env;
-use chrono::NaiveDate; // Para manejar fechas
+use chrono::NaiveDate;
+use std::time::Duration;
+use sqlx::mysql::MySqlConnectOptions;
 
 // Estructura para mapear los datos de la rutina
 #[derive(Debug)]
 pub struct Rutina {
     pub id: i32,
-    pub fecha: NaiveDate, // Usamos NaiveDate porque es compatible con el tipo DATE de SQL
+    pub fecha: NaiveDate,
     pub descripcion: String,
 }
 
 // Función para crear un pool de conexiones a la base de datos
-pub async fn create_db_pool() -> MySqlPool {
-    // Cargar variables de entorno desde el archivo .env
+pub async fn create_db_pool() -> Result<MySqlPool, Error> {
     dotenv().ok();
-
-    // Obtener la URL de la base de datos desde las variables de entorno
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-
-    // Crear y devolver un pool de conexiones
-    MySqlPool::connect(&database_url)
-        .await
-        .expect("Failed to connect to the database")
+    
+    let pool = MySqlPool::connect_with(
+        MySqlConnectOptions::from_str(&database_url)?
+            .idle_timeout(Duration::from_secs(30))
+            .max_connections(10)
+    )
+    .await?;
+    
+    Ok(pool)
 }
 
 // Función para obtener la rutina del día actual
 pub async fn obtener_rutina_diaria(pool: &MySqlPool) -> Result<Vec<Rutina>, Error> {
-    // Ejecutar directamente la consulta SQL
-    let rows = sqlx::query(
+    let rows = query(
         "SELECT id, fecha, descripcion FROM rutinas WHERE fecha = CURDATE()"
     )
     .fetch_all(pool)
     .await?;
 
-    // Crear un vector vacío para almacenar las rutinas
     let mut rutinas = Vec::new();
 
-    // Recorrer las filas y mapearlas a la estructura `Rutina`
     for row in rows {
         let rutina = Rutina {
             id: row.get("id"),
-            fecha: row.get("fecha"), // `sqlx` convierte automáticamente DATE a NaiveDate
+            fecha: row.get("fecha"),
             descripcion: row.get("descripcion"),
         };
         rutinas.push(rutina);
@@ -59,27 +59,31 @@ pub async fn insertar_confirmacion(
     altura: f64,
     sexo: &str,
 ) -> Result<(), Error> {
-    // Ejecutar el procedimiento almacenado
-    sqlx::query!(
-        "CALL InsertarConfirmacion(?, ?, ?, ?, ?)",
-        nombre,
-        edad,
-        peso,
-        altura,
-        sexo
+    query(
+        "CALL InsertarConfirmacion(?, ?, ?, ?, ?)"
     )
+    .bind(nombre)
+    .bind(edad)
+    .bind(peso)
+    .bind(altura)
+    .bind(sexo)
     .execute(pool)
     .await?;
 
     Ok(())
 }
 
-pub async fn obtener_confirmacion(pool: &sqlx::MySqlPool, id_rutina: i32) -> Result<Option<String>, sqlx::Error> {
-    let row: Option<(String,)> = sqlx::query_as("SELECT confirmacion FROM Confirmaciones WHERE id_rutina = ?")
-        .bind(id_rutina)   
-        .fetch_optional(pool)
-        .await?;
+// Función para obtener una confirmación
+pub async fn obtener_confirmacion(
+    pool: &MySqlPool, 
+    id_rutina: i32
+) -> Result<Option<String>, Error> {
+    let confirmacion = query_scalar(
+        "SELECT confirmacion FROM Confirmaciones WHERE id_rutina = ?"
+    )
+    .bind(id_rutina)
+    .fetch_optional(pool)
+    .await?;
 
-    Ok(row.map(|(confirmacion,)| confirmacion))
+    Ok(confirmacion)
 }
-  
