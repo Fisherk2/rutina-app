@@ -33,14 +33,12 @@ jobs:
             ${{ runner.os }}-cargo-
 
       - name: Build project
-        run: |
-          cd api
-          cargo build --release
+        run: cargo build --release
+        working-directory: ./api
 
       - name: Run tests
-        run: |
-          cd api
-          cargo test --verbose
+        run: cargo test --verbose
+        working-directory: ./api
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -54,7 +52,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: api
-          file: api/Dockerfile
+          context: ./api
+          file: ./api/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/rutina-app:latest
