@@ -1,27 +1,24 @@
 use rocket::{get, post, State, serde::json::Json};
-use rocket::http::Status; //Import necesario para manejar errores HTTP
+use rocket::http::Status;
 use sqlx::MySqlPool;
 use crate::db;
 
-// Estructura para mapear los datos de la rutina (opcional, si queremos usarla en Rocket)
 #[derive(Debug, serde::Serialize)]
 pub struct Rutina {
     pub id: i32,
-    pub fecha: String, // Convertimos NaiveDate a String para serializarlo como JSON
+    pub fecha: String,  // Ya viene formateada desde la base de datos
     pub descripcion: String,
 }
 
-// Estructura para recibir los datos de entrada
 #[derive(Debug, serde::Deserialize)]
 pub struct ConfirmacionInput {
     pub nombre: String,
     pub edad: i32,
     pub peso: f64,
     pub altura: f64,
-    pub sexo: String, // "M" o "F"
+    pub sexo: String,
 }
 
-// Endpoint GET /rutina
 #[get("/rutina")]
 pub async fn obtener_rutina_handler(db_pool: &State<MySqlPool>) -> Json<Vec<Rutina>> {
     let pool = db_pool.inner();
@@ -32,7 +29,7 @@ pub async fn obtener_rutina_handler(db_pool: &State<MySqlPool>) -> Json<Vec<Ruti
                 .into_iter()
                 .map(|r| Rutina {
                     id: r.id,
-                    fecha: r.fecha.format("%Y-%m-%d").to_string(),
+                    fecha: r.fecha,  // Usamos directamente el String ya formateado
                     descripcion: r.descripcion,
                 })
                 .collect();
@@ -43,7 +40,6 @@ pub async fn obtener_rutina_handler(db_pool: &State<MySqlPool>) -> Json<Vec<Ruti
     }
 }
 
-// Endpoint POST /confirmacion
 #[post("/confirmacion", format = "json", data = "<input>")]
 pub async fn insertar_confirmacion_handler(
     db_pool: &State<MySqlPool>,
@@ -63,11 +59,10 @@ pub async fn insertar_confirmacion_handler(
 
     match db::insertar_confirmacion(pool, nombre, edad, peso, altura, sexo).await {
         Ok(_) => Ok("Confirmación insertada exitosamente".to_string()),
-        Err(_) => Err("Error al insertar la confirmación".to_string()),
+        Err(e) => Err(format!("Error al insertar la confirmación: {}", e)),
     }
 }
 
-// Endpoint GET /confirmacion/<id_rutina>
 #[get("/confirmacion/<id_rutina>")]
 pub async fn obtener_confirmacion_handler(
     db_pool: &State<MySqlPool>,
