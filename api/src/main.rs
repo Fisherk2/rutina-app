@@ -1,23 +1,24 @@
-#[macro_use]
+#[macro_use] 
 extern crate rocket;
 
 mod db;
 mod handler;
 
-use rocket::launch;
+use rocket::{launch, Build, Rocket};
 use sqlx::MySqlPool;
+use handler::{obtener_rutina_handler, insertar_confirmacion_handler, obtener_confirmacion_handler};
 
 #[launch]
-async fn rocket() -> _ {
-    // Crear el pool de conexiones a la base de datos
-    let db_pool = db::create_db_pool().await;
+async fn rocket() -> Rocket<Build> {
+    // Configuración del pool de conexiones con manejo de errores
+    let db_pool = db::create_db_pool().await.expect("Failed to create database pool");
 
-    // Configurar Rocket
+    // Configuración de Rocket
     rocket::build()
-        .manage(db_pool) // Compartir el pool de conexiones con los endpoints
+        .manage(db_pool) // Pool disponible en todos los handlers
         .mount("/", routes![
-            handler::obtener_rutina_handler,
-            handler::insertar_confirmacion_handler
-            handler::obtener_confirmacion_handler
-        ]) // Montar ambos endpoints
+            obtener_rutina_handler,
+            insertar_confirmacion_handler,
+            obtener_confirmacion_handler
+        ])
 }
