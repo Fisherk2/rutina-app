@@ -8,8 +8,8 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  DOCKER_USERNAME: "shinnog"
-  DOCKER_TOKEN: "dckr_pat_Q0WVCVgb_BMBboE4GsO6hu5kor0"
+  DOCKERHUB_USERNAME: "shinnog"
+  DOCKERHUB_TOKEN: "dckr_pat_Q0WVCVgb_BMBboE4GsO6hu5kor0"
 
 jobs:
   build-test-deploy:
@@ -48,9 +48,9 @@ jobs:
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ env.DOCKER_USERNAME }}
-          password: ${{ env.DOCKER_TOKEN }}
-          # Elimina estas líneas que causan el error:
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_TOKEN }}
+          # Elimina los parámetros de ECR que causan el error
           # ecr: auto
           # logout: true
 
@@ -61,5 +61,5 @@ jobs:
           file: ./api/Dockerfile
           push: ${{ github.ref == 'refs/heads/main' }}
           tags: |
-            ${{ env.DOCKER_USERNAME }}/rutina-app:latest
-            ${{ env.DOCKER_USERNAME }}/rutina-app:${{ github.sha }}
+            ${{ env.DOCKERHUB_USERNAME }}/rutina-app:latest
+            ${{ env.DOCKERHUB_USERNAME }}/rutina-app:${{ github.sha }}
