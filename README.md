@@ -1,7 +1,7 @@
 # Rutina de ejercicios
 *Integrantes*:
-- {Guapo 1}
-- {Guapo 2}
+- Ibarra Martínez Ximena Estefania
+- Galaviz Flores Christian Darío
 - Espinoza Lopez Juan Diego
 - Guerrero Dávila Juan Carlos
 - Zúñiga Gómez Jóse Alberto
