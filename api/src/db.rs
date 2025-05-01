@@ -3,35 +3,22 @@ use dotenv::dotenv;
 use std::env;
 use chrono::NaiveDate;
 
-// Wrapper para NaiveDate que podemos implementar nuestros traits
-#[derive(Debug)]
-struct SqlxNaiveDate(NaiveDate);
-
-// Implementación de los traits necesarios para nuestro wrapper
-impl sqlx::Type<sqlx::MySql> for SqlxNaiveDate {
-    fn type_info() -> sqlx::mysql::MySqlTypeInfo {
-        <&str as sqlx::Type<sqlx::MySql>>::type_info()
-    }
-}
-
-impl sqlx::Encode<'_, sqlx::MySql> for SqlxNaiveDate {
-    fn encode_by_ref(&self, buf: &mut sqlx::mysql::MySqlArguments) -> sqlx::encode::IsNull {
-        self.0.format("%Y-%m-%d").to_string().encode_by_ref(buf)
-    }
-}
-
-impl<'r> sqlx::Decode<'r, sqlx::MySql> for SqlxNaiveDate {
-    fn decode(value: sqlx::mysql::MySqlValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
-        let s = <&str as sqlx::Decode<sqlx::MySql>>::decode(value)?;
-        Ok(SqlxNaiveDate(NaiveDate::parse_from_str(s, "%Y-%m-%d")?))
-    }
-}
-
+// Nueva solución: Usamos String para almacenar fechas y convertimos cuando sea necesario
 #[derive(Debug)]
 pub struct Rutina {
     pub id: i32,
-    pub fecha: NaiveDate,
+    pub fecha: String,  // Almacenamos como String
     pub descripcion: String,
+}
+
+// Función helper para convertir String a NaiveDate
+pub fn string_to_date(fecha: &str) -> Result<NaiveDate, chrono::ParseError> {
+    NaiveDate::parse_from_str(fecha, "%Y-%m-%d")
+}
+
+// Función helper para convertir NaiveDate a String
+pub fn date_to_string(fecha: NaiveDate) -> String {
+    fecha.format("%Y-%m-%d").to_string()
 }
 
 pub async fn create_db_pool() -> Result<MySqlPool, Error> {
@@ -42,24 +29,22 @@ pub async fn create_db_pool() -> Result<MySqlPool, Error> {
 
 pub async fn obtener_rutina_diaria(pool: &MySqlPool) -> Result<Vec<Rutina>, Error> {
     let rows = query(
-        "SELECT id, fecha, descripcion FROM rutinas WHERE fecha = CURDATE()"
+        "SELECT id, DATE_FORMAT(fecha, '%Y-%m-%d') as fecha, descripcion FROM rutinas WHERE fecha = CURDATE()"
     )
     .fetch_all(pool)
     .await?;
 
     let mut rutinas = Vec::new();
     for row in rows {
-        let fecha_wrapper: SqlxNaiveDate = row.try_get("fecha")?;
         rutinas.push(Rutina {
             id: row.try_get("id")?,
-            fecha: fecha_wrapper.0,
+            fecha: row.try_get("fecha")?,  // Obtenemos directamente como String
             descripcion: row.try_get("descripcion")?,
         });
     }
     Ok(rutinas)
 }
 
-// Resto de tus funciones permanecen igual...
 pub async fn insertar_confirmacion(
     pool: &MySqlPool,
     nombre: &str,
