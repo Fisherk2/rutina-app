@@ -1,9 +1,7 @@
-use sqlx::{MySqlPool, Error, query, query_scalar, Row}; // Añadido Row
+use sqlx::{MySqlPool, Error, query, query_scalar, Row};
 use dotenv::dotenv;
 use std::env;
 use chrono::NaiveDate;
-use std::time::Duration;
-use sqlx::mysql::MySqlConnectOptions;
 use std::str::FromStr;
 
 #[derive(Debug)]
@@ -17,11 +15,10 @@ pub async fn create_db_pool() -> Result<MySqlPool, Error> {
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     
-    let options = MySqlConnectOptions::from_str(&database_url)?
-        .idle_timeout(Duration::from_secs(30))
-        .max_connections(10);
-
-    MySqlPool::connect_with(options).await
+    // Configuración simplificada y compatible
+    let pool = MySqlPool::connect(&database_url).await?;
+    
+    Ok(pool)
 }
 
 pub async fn obtener_rutina_diaria(pool: &MySqlPool) -> Result<Vec<Rutina>, Error> {
@@ -68,10 +65,12 @@ pub async fn obtener_confirmacion(
     pool: &MySqlPool,
     id_rutina: i32
 ) -> Result<Option<String>, Error> {
-    query_scalar(
+    let confirmacion = query_scalar(
         "SELECT confirmacion FROM Confirmaciones WHERE id_rutina = ?"
     )
     .bind(id_rutina)
     .fetch_optional(pool)
-    .await
+    .await?;
+
+    Ok(confirmacion)
 }
