@@ -1,11 +1,11 @@
-use sqlx::{MySqlPool, Error, Row, query, query_scalar};
+use sqlx::{MySqlPool, Error, query, query_scalar};
 use dotenv::dotenv;
 use std::env;
 use chrono::NaiveDate;
 use std::time::Duration;
 use sqlx::mysql::MySqlConnectOptions;
+use std::str::FromStr;  // Importación añadida para from_str
 
-// Estructura para mapear los datos de la rutina
 #[derive(Debug)]
 pub struct Rutina {
     pub id: i32,
@@ -13,7 +13,6 @@ pub struct Rutina {
     pub descripcion: String,
 }
 
-// Función para crear un pool de conexiones a la base de datos
 pub async fn create_db_pool() -> Result<MySqlPool, Error> {
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
@@ -28,7 +27,6 @@ pub async fn create_db_pool() -> Result<MySqlPool, Error> {
     Ok(pool)
 }
 
-// Función para obtener la rutina del día actual
 pub async fn obtener_rutina_diaria(pool: &MySqlPool) -> Result<Vec<Rutina>, Error> {
     let rows = query(
         "SELECT id, fecha, descripcion FROM rutinas WHERE fecha = CURDATE()"
@@ -37,20 +35,16 @@ pub async fn obtener_rutina_diaria(pool: &MySqlPool) -> Result<Vec<Rutina>, Erro
     .await?;
 
     let mut rutinas = Vec::new();
-
     for row in rows {
-        let rutina = Rutina {
+        rutinas.push(Rutina {
             id: row.get("id"),
             fecha: row.get("fecha"),
             descripcion: row.get("descripcion"),
-        };
-        rutinas.push(rutina);
+        });
     }
-
     Ok(rutinas)
 }
 
-// Función para insertar una confirmación usando el procedimiento almacenado
 pub async fn insertar_confirmacion(
     pool: &MySqlPool,
     nombre: &str,
@@ -73,17 +67,14 @@ pub async fn insertar_confirmacion(
     Ok(())
 }
 
-// Función para obtener una confirmación
 pub async fn obtener_confirmacion(
-    pool: &MySqlPool, 
+    pool: &MySqlPool,
     id_rutina: i32
 ) -> Result<Option<String>, Error> {
-    let confirmacion = query_scalar(
+    query_scalar(
         "SELECT confirmacion FROM Confirmaciones WHERE id_rutina = ?"
     )
     .bind(id_rutina)
     .fetch_optional(pool)
-    .await?;
-
-    Ok(confirmacion)
+    .await
 }
