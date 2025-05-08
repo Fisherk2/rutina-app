@@ -4,7 +4,7 @@ FROM rust:1.77 as builder
 WORKDIR /app
 
 # Copiar dependencias
-COPY Cargo.toml ./
+COPY Cargo.toml Cargo.lock ./
 COPY src ./src
 
 # Compilar en release
